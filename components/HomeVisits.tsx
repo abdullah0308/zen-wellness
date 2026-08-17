@@ -1,40 +1,42 @@
+import Image from "next/image";
 import { Reveal } from "./Reveal";
-import { ComfortIcon, PrivacyIcon, FlexibilityIcon } from "./icons";
+import { Clock, House, Lock } from "./icons";
 import type { Category } from "@/lib/site";
+import { IMAGES } from "@/lib/images";
 
 const PILLARS = {
   massage: [
     {
-      icon: ComfortIcon,
+      icon: House,
       title: "Comfort",
-      text: "No traffic, no waiting rooms. Your session happens in the space where you're most at ease.",
+      text: "No traffic, no waiting room. The session happens where you are already at ease.",
     },
     {
-      icon: PrivacyIcon,
+      icon: Lock,
       title: "Privacy",
-      text: "One-on-one professional care in your own home — discreet, respectful and fully yours.",
+      text: "One-to-one professional care in your own home. Discreet, and entirely yours.",
     },
     {
-      icon: FlexibilityIcon,
+      icon: Clock,
       title: "Flexibility",
-      text: "Sessions that fit around your schedule — early mornings, evenings or weekends.",
+      text: "Early mornings, evenings or weekends. We work around your week.",
     },
   ],
   coaching: [
     {
-      icon: ComfortIcon,
+      icon: House,
       title: "Comfort",
-      text: "No gym intimidation, no commute. Train where you feel at ease — your home, garden or nearby space.",
+      text: "No gym intimidation, no commute. Train in your home, garden or a space nearby.",
     },
     {
-      icon: PrivacyIcon,
+      icon: Lock,
       title: "Privacy",
-      text: "One-on-one attention with zero crowds — just you, your coach and your goals.",
+      text: "One-to-one attention with no crowd. Just you, your coach and the work.",
     },
     {
-      icon: FlexibilityIcon,
+      icon: Clock,
       title: "Flexibility",
-      text: "Workouts that fit around your life — early mornings, evenings or weekends.",
+      text: "Early mornings, evenings or weekends. We work around your week.",
     },
   ],
 };
@@ -42,100 +44,124 @@ const PILLARS = {
 const STEPS = {
   massage: [
     {
-      n: "01",
       title: "Book your slot",
-      text: "Message us on WhatsApp or use the booking form — pick a service, date and time.",
+      text: "Message us on WhatsApp or use the form. Pick a service, a date and a time.",
     },
     {
-      n: "02",
       title: "We come to you",
-      text: "Your therapist arrives at your door with everything needed for the session.",
+      text: "Your therapist arrives at your door with everything the session needs.",
     },
     {
-      n: "03",
-      title: "Restore & perform",
-      text: "You relax, recover and get back to your best — without ever leaving home.",
+      title: "Restore and perform",
+      text: "You relax, recover and get back to your best without leaving home.",
     },
   ],
   coaching: [
     {
-      n: "01",
       title: "Book your slot",
-      text: "Message us on WhatsApp or use the booking form — tell us your goal and availability.",
+      text: "Message us on WhatsApp or use the form. Tell us your goal and your availability.",
     },
     {
-      n: "02",
       title: "We come to you",
-      text: "Your coach arrives with a plan and the equipment needed for your workout.",
+      text: "Your coach arrives with a plan and the equipment your workout needs.",
     },
     {
-      n: "03",
-      title: "Train & transform",
-      text: "Customised workouts, personal guidance and real, measurable results.",
+      title: "Train and transform",
+      text: "Customised sessions, personal guidance and results you can measure.",
     },
   ],
 };
 
+/**
+ * Split section: photograph and supporting pillars on the left, the booking
+ * sequence as a vertical timeline on the right.
+ *
+ * The steps are numbered because they are genuinely ordered - you cannot be
+ * treated before you have booked. The connecting rule and its nodes reuse the
+ * vertebrae motif from the logo and the page spine.
+ */
 export function HomeVisits({ category }: { category: Category }) {
   const isMassage = category === "massage";
+  const steps = STEPS[category];
+  const image = isMassage ? IMAGES.massageAtHome : IMAGES.coachingAtHome;
+
   return (
     <section
       id="home-visits"
-      className="noise relative scroll-mt-24 overflow-hidden bg-ink-2 py-24"
+      className="noise relative scroll-mt-24 overflow-hidden bg-ink-2 py-24 lg:py-32"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_60%_at_50%_0%,rgba(62,198,188,0.08),transparent_70%)]" />
+      <div className="relative mx-auto grid max-w-[1400px] gap-12 px-5 lg:grid-cols-2 lg:gap-20 lg:px-8">
+        {/* ---- left: image + pillars ---- */}
+        <div>
+          <Reveal>
+            <h2 className="h-section max-w-xl text-[clamp(2rem,4.2vw,3rem)] text-bone">
+              {isMassage ? "The spa" : "Your coach"}{" "}
+              <span className="em-italic">comes to you</span>
+            </h2>
+            <p className="mt-5 max-w-md leading-relaxed text-mist">
+              {isMassage
+                ? "We come to you. You relax. We take care of the rest."
+                : "We come to you. You show up. We take care of the rest."}
+            </p>
+          </Reveal>
 
-      <div className="relative mx-auto max-w-6xl px-5 lg:px-8">
-        <Reveal className="text-center">
-          <p className="font-display text-sm font-medium uppercase tracking-[0.35em] text-teal">
-            At your own home &amp; comfort
-          </p>
-          <h2 className="mx-auto mt-3 max-w-2xl font-display text-4xl font-semibold uppercase leading-tight text-foam sm:text-5xl">
-            {isMassage ? (
-              <>
-                The spa comes <span className="text-teal">to you</span>
-              </>
-            ) : (
-              <>
-                Your coach comes <span className="text-teal">to you</span>
-              </>
-            )}
-          </h2>
-          <p className="mx-auto mt-5 font-script text-3xl text-teal-bright">
-            {isMassage
-              ? "We come to you. You relax. We take care."
-              : "We come to you. You show up. We do the rest."}
-          </p>
-        </Reveal>
+          <Reveal delay={100}>
+            <div className="img-frame mt-9 aspect-[4/3] w-full">
+              <Image
+                src={image.src}
+                alt={image.alt}
+                fill
+                placeholder="blur"
+                sizes="(max-width: 1024px) 100vw, 46vw"
+                className="object-cover"
+              />
+            </div>
+          </Reveal>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-3">
-          {PILLARS[category].map((p, i) => (
-            <Reveal key={p.title} delay={i * 100}>
-              <div className="h-full rounded-2xl border border-foam/[0.07] bg-ink/60 p-7 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-teal/25 bg-teal/10 text-teal">
-                  <p.icon className="h-6.5 w-6.5" />
-                </div>
-                <h3 className="mt-4 font-display text-lg font-semibold uppercase tracking-wider text-foam">
-                  {p.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-mist">{p.text}</p>
-              </div>
-            </Reveal>
-          ))}
+          <Reveal delay={160}>
+            <ul className="mt-9 grid gap-6 sm:grid-cols-3 sm:gap-5">
+              {PILLARS[category].map((pillar) => (
+                <li key={pillar.title}>
+                  <pillar.icon className="h-5 w-5 text-teal" weight="regular" />
+                  <h3 className="mt-3 text-sm font-semibold tracking-wide text-bone">
+                    {pillar.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-mist">{pillar.text}</p>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
 
-        <div className="mt-20 grid gap-8 md:grid-cols-3">
-          {STEPS[category].map((s, i) => (
-            <Reveal key={s.n} delay={i * 100}>
-              <div className="relative pl-2">
-                <span className="font-display text-6xl font-bold text-teal/15">{s.n}</span>
-                <h3 className="-mt-5 font-display text-xl font-semibold uppercase tracking-wide text-foam">
-                  {s.title}
-                </h3>
-                <p className="mt-2 max-w-xs text-sm leading-relaxed text-mist">{s.text}</p>
-              </div>
-            </Reveal>
-          ))}
+        {/* ---- right: the sequence ---- */}
+        <div className="lg:pt-4">
+          <ol className="relative">
+            {/* the connecting spine */}
+            <span
+              aria-hidden="true"
+              className="absolute left-[13px] top-3 bottom-3 w-px bg-gradient-to-b from-teal/50 via-teal/25 to-transparent"
+            />
+
+            {steps.map((step, i) => (
+              <Reveal
+                key={step.title}
+                as="li"
+                delay={i * 110}
+                className="relative flex gap-6 pb-12 last:pb-0"
+              >
+                <span
+                  aria-hidden="true"
+                  className="relative z-10 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-teal/40 bg-ink-2 text-[11px] font-semibold text-teal"
+                >
+                  {i + 1}
+                </span>
+                <div className="pt-0.5">
+                  <h3 className="h-section text-2xl text-bone">{step.title}</h3>
+                  <p className="mt-2 max-w-sm leading-relaxed text-mist">{step.text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </ol>
         </div>
       </div>
     </section>

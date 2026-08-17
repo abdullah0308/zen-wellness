@@ -1,3 +1,8 @@
+/**
+ * The Zen mark is the brand's own asset, so it stays hand-authored SVG rather
+ * than coming from the icon library. The six dots down the diagonal read as
+ * vertebrae - that idea is reused at page scale by SpineRail.
+ */
 export function ZenMark({
   className = "",
   animated = false,
@@ -6,12 +11,7 @@ export function ZenMark({
   animated?: boolean;
 }) {
   return (
-    <svg
-      viewBox="0 0 100 100"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 100 100" fill="none" className={className} aria-hidden="true">
       {/* brushed ring, two arcs */}
       <path
         d="M 88 32 A 43 43 0 0 0 22 18"
@@ -34,7 +34,7 @@ export function ZenMark({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* spine dots along the diagonal */}
+      {/* vertebrae along the diagonal */}
       {[
         { cx: 60, cy: 34, r: 2.2 },
         { cx: 56.5, cy: 41, r: 2.7 },
@@ -49,8 +49,7 @@ export function ZenMark({
           cy={d.cy}
           r={d.r}
           fill="var(--teal)"
-          className={animated ? "spine-dot" : undefined}
-          style={animated ? { animationDelay: `${i * 0.28}s` } : undefined}
+          opacity={animated ? 0.55 + i * 0.09 : 1}
         />
       ))}
     </svg>
@@ -60,21 +59,21 @@ export function ZenMark({
 export function LogoLockup({ compact = false }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-3">
-      <ZenMark className={compact ? "h-9 w-9 text-foam" : "h-12 w-12 text-foam"} />
+      <ZenMark className={compact ? "h-9 w-9 text-bone" : "h-12 w-12 text-bone"} />
       <span className="flex flex-col leading-none">
         <span
-          className={`font-display font-semibold tracking-[0.18em] text-foam ${
+          className={`font-display font-semibold tracking-tight text-bone ${
             compact ? "text-lg" : "text-2xl"
           }`}
         >
-          ZEN
+          Zen
         </span>
         <span
-          className={`font-display font-normal tracking-[0.42em] text-teal ${
-            compact ? "text-[0.55rem]" : "text-[0.65rem]"
+          className={`font-display font-medium uppercase tracking-[0.3em] text-teal ${
+            compact ? "text-[0.5rem]" : "text-[0.6rem]"
           }`}
         >
-          WELLNESS
+          Wellness
         </span>
       </span>
     </span>

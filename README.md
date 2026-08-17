@@ -1,18 +1,68 @@
-# Zen Wellness — Website
+# Zen Wellness - Website
 
 Website for Zen Wellness: mobile massage & personal coaching in Mauritius.
-Next.js (App Router) + Tailwind CSS v4, dark teal brand theme, pure-SVG
-branding, WhatsApp-first booking, and a self-hosted review system.
+Next.js (App Router) + Tailwind CSS v4, dark teal brand theme, WhatsApp-first
+booking, and a self-hosted review system.
 
 ## Pages
 
 | Route | What it is |
 |---|---|
-| `/` | Gateway — visitor picks Massage or Personal Coaching |
+| `/` | Gateway - visitor picks Massage or Personal Coaching |
 | `/massage` | Massage landing page (Sport, Relaxation, Deep Tissue, Recovery) |
 | `/coaching` | Coaching landing page (Fat Loss, Muscle Building, Endurance, Rehabilitation) |
 | `/admin` | Owner-only review moderation (password protected, not indexed) |
 | `/api/reviews` | Reviews API — GET list, POST create, DELETE (admin) |
+
+## Design system
+
+Typography, colour and shape are defined once in
+[app/globals.css](app/globals.css) and used everywhere.
+
+| Token group | Where | Notes |
+|---|---|---|
+| Colour | `:root` in `app/globals.css` | One accent (`--teal`, the original brand colour) against a warm-dark ground. `--bone` is the warm off-white for text. |
+| Type | `app/layout.tsx` | Bricolage Grotesque (display) + Instrument Sans (body/UI), both variable, both self-hosted via `next/font`. Emphasis is same-family italic (`.em-italic`), never a third face. |
+| Shape | `--r-card` / `--r-input` | Buttons are full-pill, cards and media frames 20px, inputs 12px. One system, no exceptions. |
+| Photo grading | `.img-frame` and modifiers | Pushes every photo toward the brand teal so unrelated stock reads as one set. |
+
+Two rules worth knowing before editing the CSS:
+
+- **Custom classes must stay inside `@layer base` or `@layer components`.**
+  Unlayered CSS outranks every Tailwind layer, so an unlayered
+  `.img-frame { position: relative }` will silently beat `lg:absolute` in your
+  markup.
+- **The hero photo fades out with a `mask-image`, not a dark gradient on top.**
+  Painting the page colour over the image leaves a visible seam, because the
+  background behind it is a gradient rather than a flat fill.
+
+The left-edge progress rail (`components/SpineRail.tsx`) is the page's
+signature element: the logo's six dots are vertebrae, and the rail applies that
+idea at page scale. It only appears above 1600px, where there is a real gutter
+for it to sit in.
+
+## Photography
+
+Photos live in `assets/photos/` and are statically imported through
+[lib/images.ts](lib/images.ts), which also records the Unsplash id each one came
+from. They are committed rather than hotlinked so the site does not depend on a
+third party at request time.
+
+**These are stock stand-ins.** Replace them with real photographs of the actual
+therapist and real sessions before treating the site as final. The shot list:
+
+| Slot | What to shoot |
+|---|---|
+| `massage-hero` | Therapist's hands mid-treatment on a client's back. Vertical, soft natural light. |
+| `massage-detail` | Oil being poured or warmed in the hands, close crop. |
+| `massage-at-home` | The table set up in a client's living space, or hands with oil in low light. |
+| `coaching-hero` | Client mid-effort, cropped tight on the working body rather than the face. |
+| `coaching-detail` | Equipment being handled, low light. |
+| `at-home` | A session in progress in a real home or garden. |
+| `island` | Wide Mauritius landscape, used only as a dark background texture. |
+
+When adding an image, **look at it before committing it**. A guessed Unsplash id
+either 404s or returns something unrelated to what you expected.
 
 ## Run locally
 
@@ -55,6 +105,9 @@ npm run start
 | Page copy (hero, chips, headings) | [app/massage/page.tsx](app/massage/page.tsx), [app/coaching/page.tsx](app/coaching/page.tsx) |
 | Gateway cards | [app/page.tsx](app/page.tsx) |
 | Section components | `components/` — shared by both verticals via props |
+| Photographs | `assets/photos/` + [lib/images.ts](lib/images.ts) |
+| Typefaces | [app/layout.tsx](app/layout.tsx) (`next/font/google`) |
+| Icons | [components/icons.tsx](components/icons.tsx) — re-exports Phosphor; add new glyphs there |
 
 ## How booking works
 

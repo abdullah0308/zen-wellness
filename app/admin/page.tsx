@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { LogoLockup } from "@/components/Logo";
-import { StarIcon } from "@/components/icons";
+import { Star } from "@/components/icons";
 
 type Review = {
   id: number;
@@ -14,7 +15,7 @@ type Review = {
 };
 
 const inputCls =
-  "w-full rounded-xl border border-foam/10 bg-ink px-4 py-3 text-sm text-foam placeholder:text-mist/50 outline-none transition-colors focus:border-teal/60 focus:ring-2 focus:ring-teal/20";
+  "w-full rounded-input border border-bone/12 bg-ink px-4 py-3 text-base text-bone placeholder:text-mist/60 outline-none transition-colors duration-150 focus:border-teal/70";
 
 export default function AdminPage() {
   const [password, setPassword] = useState("");
@@ -64,34 +65,40 @@ export default function AdminPage() {
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-12">
       <div className="flex items-center justify-between">
-        <a href="/">
+        <Link href="/" aria-label="Zen Wellness, home">
           <LogoLockup compact />
-        </a>
-        <span className="font-display text-sm uppercase tracking-[0.3em] text-mist">
-          Review admin
-        </span>
+        </Link>
+        <span className="text-sm text-mist">Review admin</span>
       </div>
 
       {!unlocked ? (
-        <div className="mx-auto mt-24 max-w-sm rounded-3xl border border-foam/[0.08] bg-ink-2 p-8">
-          <h1 className="font-display text-xl font-semibold uppercase tracking-wide text-foam">
-            Owner access
-          </h1>
+        <div className="panel mx-auto mt-24 max-w-sm p-8">
+          <h1 className="h-section text-xl text-bone">Owner access</h1>
           <p className="mt-2 text-sm text-mist">
             Enter the admin password to manage reviews.
           </p>
+          <label htmlFor="admin-password" className="sr-only">
+            Admin password
+          </label>
           <input
+            id="admin-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && unlock()}
             placeholder="Admin password"
+            aria-describedby={error ? "admin-error" : undefined}
             className={`${inputCls} mt-5`}
           />
-          {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+          {error && (
+            <p id="admin-error" role="alert" className="mt-3 text-sm text-red-300">
+              {error}
+            </p>
+          )}
           <button
+            type="button"
             onClick={unlock}
-            className="mt-4 w-full rounded-full bg-teal px-6 py-3 font-display text-sm font-medium uppercase tracking-wider text-ink transition-colors hover:bg-teal-bright"
+            className="mt-4 w-full rounded-full bg-teal px-6 py-3 text-sm font-semibold text-ink transition-colors duration-150 hover:bg-teal-bright active:scale-[0.98]"
           >
             Unlock
           </button>
@@ -99,18 +106,20 @@ export default function AdminPage() {
       ) : (
         <div className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="font-display text-2xl font-semibold uppercase tracking-wide text-foam">
+            <h1 className="h-section text-2xl text-bone">
               {reviews.length} review{reviews.length === 1 ? "" : "s"}
             </h1>
             <div className="flex gap-2">
               {(["all", "massage", "coaching"] as const).map((f) => (
                 <button
                   key={f}
+                  type="button"
                   onClick={() => setFilter(f)}
-                  className={`rounded-full px-4 py-1.5 text-sm capitalize transition-colors ${
+                  aria-pressed={filter === f}
+                  className={`rounded-full px-4 py-1.5 text-sm capitalize transition-colors duration-150 ${
                     filter === f
-                      ? "bg-teal text-ink font-semibold"
-                      : "border border-foam/15 text-mist hover:text-foam"
+                      ? "bg-teal font-semibold text-ink"
+                      : "border border-bone/15 text-mist hover:text-bone"
                   }`}
                 >
                   {f}
@@ -119,45 +128,57 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+          {error && (
+            <p role="alert" className="mt-4 text-sm text-red-300">
+              {error}
+            </p>
+          )}
 
           <div className="mt-6 space-y-4">
             {shown.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-foam/15 p-8 text-center text-sm text-mist">
+              <p className="rounded-[20px] border border-dashed border-bone/15 p-8 text-center text-sm text-mist">
                 No reviews here.
               </p>
             )}
             {shown.map((r) => (
               <article
                 key={r.id}
-                className="flex flex-col gap-3 rounded-2xl border border-foam/[0.07] bg-ink-2 p-5 sm:flex-row sm:items-start sm:justify-between"
+                className="panel flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-teal/10 px-3 py-0.5 text-xs font-semibold uppercase tracking-wider text-teal">
+                    <span className="rounded-full bg-teal/12 px-3 py-0.5 text-xs font-semibold uppercase tracking-wider text-teal">
                       {r.category}
                     </span>
-                    <span className="inline-flex gap-0.5">
+                    <span
+                      className="inline-flex gap-0.5"
+                      aria-label={`${r.rating} out of 5 stars`}
+                    >
                       {[1, 2, 3, 4, 5].map((n) => (
-                        <StarIcon
+                        <Star
                           key={n}
-                          className={`h-3.5 w-3.5 ${n <= r.rating ? "text-teal" : "text-foam/15"}`}
+                          weight={n <= r.rating ? "fill" : "regular"}
+                          aria-hidden="true"
+                          className={`h-3.5 w-3.5 ${
+                            n <= r.rating ? "text-teal" : "text-bone/25"
+                          }`}
                         />
                       ))}
                     </span>
-                    <span className="text-sm font-semibold text-foam">{r.name}</span>
-                    <span className="text-xs text-mist/60">
+                    <span className="text-sm font-semibold text-bone">{r.name}</span>
+                    <span className="text-xs text-mist">
                       {new Date(r.createdAt).toLocaleDateString("en-GB")}
                     </span>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-mist">{r.text}</p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => remove(r.id)}
                   disabled={busy === r.id}
-                  className="shrink-0 rounded-full border border-red-400/40 px-4 py-1.5 text-sm text-red-400 transition-colors hover:border-red-400 hover:bg-red-400/10 disabled:opacity-50"
+                  className="shrink-0 whitespace-nowrap rounded-full border border-red-400/40 px-4 py-1.5 text-sm text-red-300 transition-colors duration-150 hover:border-red-400 hover:bg-red-400/10 disabled:opacity-50"
                 >
-                  {busy === r.id ? "Deleting…" : "Delete"}
+                  {busy === r.id ? "Deleting" : "Delete"}
                 </button>
               </article>
             ))}

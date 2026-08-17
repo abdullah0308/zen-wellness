@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LogoLockup } from "./Logo";
-import { WhatsAppIcon } from "./icons";
+import { List, WhatsappLogo, X } from "./icons";
 import { whatsappLink } from "@/lib/site";
 
 const LINKS = [
   { href: "#services", label: "Services" },
-  { href: "#home-visits", label: "Home Visits" },
+  { href: "#home-visits", label: "Home visits" },
   { href: "#reviews", label: "Reviews" },
   { href: "#book", label: "Contact" },
 ];
@@ -24,116 +25,139 @@ export function Nav({
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
+  // A sentinel 24px down the document tells us when the page has scrolled,
+  // rather than a scroll listener that fires on every frame. The header is
+  // fixed, so the sentinel is placed on the body instead of inside it.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const sentinel = document.createElement("div");
+    sentinel.setAttribute("aria-hidden", "true");
+    sentinel.style.cssText =
+      "position:absolute;top:24px;left:0;width:1px;height:1px;pointer-events:none;";
+    document.body.prepend(sentinel);
+
+    const observer = new IntersectionObserver(([entry]) =>
+      setScrolled(!entry.isIntersecting)
+    );
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+      sentinel.remove();
+    };
   }, []);
+
+  // Close on Escape, the behaviour a keyboard user expects from any overlay.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled || open
-          ? "bg-ink/90 backdrop-blur-md border-b border-teal/10 shadow-lg shadow-black/20"
+          ? "border-b border-teal/10 bg-ink/90 shadow-lg shadow-black/20 backdrop-blur-md"
           : "bg-transparent"
       }`}
     >
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 lg:px-8">
-        <a href="/" aria-label="Zen Wellness — home">
+      <nav className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-5 py-3 lg:px-8">
+        <Link href="/" aria-label="Zen Wellness, home">
           <LogoLockup compact />
-        </a>
+        </Link>
 
         <ul className="hidden items-center gap-7 md:flex">
-          {LINKS.map((l) => (
-            <li key={l.href}>
+          {LINKS.map((link) => (
+            <li key={link.href}>
               <a
-                href={l.href}
-                className="text-sm font-medium text-mist transition-colors hover:text-teal-bright"
+                href={link.href}
+                className="whitespace-nowrap text-sm text-mist transition-colors duration-150 hover:text-teal-bright"
               >
-                {l.label}
+                {link.label}
               </a>
             </li>
           ))}
           <li>
-            <a
+            <Link
               href={switchHref}
-              className="rounded-full border border-teal/30 px-4 py-1.5 text-sm font-medium text-teal transition-colors hover:border-teal hover:text-teal-bright"
+              className="whitespace-nowrap rounded-full border border-teal/30 px-4 py-1.5 text-sm text-teal transition-colors duration-150 hover:border-teal hover:text-teal-bright"
             >
               {switchLabel}
-            </a>
+            </Link>
           </li>
         </ul>
 
-        <div className="hidden md:block">
-          <a
-            href={whatsappLink(waMessage)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-teal px-5 py-2.5 font-display text-sm font-medium uppercase tracking-wider text-ink transition-all hover:bg-teal-bright hover:shadow-lg hover:shadow-teal/25"
-          >
-            <WhatsAppIcon className="h-4 w-4" />
-            Book Now
-          </a>
-        </div>
+        <a
+          href={whatsappLink(waMessage)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden items-center gap-2 whitespace-nowrap rounded-full bg-teal px-5 py-2.5 text-sm font-semibold text-ink transition-all duration-150 hover:bg-teal-bright active:scale-[0.98] md:inline-flex"
+        >
+          <WhatsappLogo className="h-4 w-4" weight="regular" />
+          Book your slot
+        </a>
 
-        {/* mobile toggle */}
         <button
-          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden"
-          onClick={() => setOpen(!open)}
+          type="button"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-bone transition-colors duration-150 hover:text-teal-bright md:hidden"
+          onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
+          aria-controls="mobile-menu"
         >
-          <span
-            className={`h-0.5 w-6 bg-foam transition-transform ${
-              open ? "translate-y-2 rotate-45" : ""
-            }`}
-          />
-          <span className={`h-0.5 w-6 bg-foam transition-opacity ${open ? "opacity-0" : ""}`} />
-          <span
-            className={`h-0.5 w-6 bg-foam transition-transform ${
-              open ? "-translate-y-2 -rotate-45" : ""
-            }`}
-          />
+          {open ? (
+            <X className="h-6 w-6" weight="bold" />
+          ) : (
+            <List className="h-6 w-6" weight="bold" />
+          )}
         </button>
       </nav>
 
-      {/* mobile menu */}
+      {/* Mobile menu.
+          `invisible` when closed is doing real work: it removes the links from
+          the tab order. Height alone would animate them away visually while
+          leaving them focusable behind the page. */}
       <div
+        id="mobile-menu"
         className={`overflow-hidden transition-all duration-300 md:hidden ${
-          open ? "max-h-[28rem] border-t border-teal/10" : "max-h-0"
+          open
+            ? "max-h-[30rem] border-t border-teal/10"
+            : "invisible max-h-0 border-t-0"
         }`}
       >
         <ul className="flex flex-col gap-1 px-5 py-4">
-          {LINKS.map((l) => (
-            <li key={l.href}>
+          {LINKS.map((link) => (
+            <li key={link.href}>
               <a
-                href={l.href}
+                href={link.href}
                 onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2.5 font-medium text-mist transition-colors hover:bg-ink-3 hover:text-teal-bright"
+                className="block rounded-input px-3 py-3 text-mist transition-colors duration-150 hover:bg-ink-3 hover:text-teal-bright"
               >
-                {l.label}
+                {link.label}
               </a>
             </li>
           ))}
           <li>
-            <a
+            <Link
               href={switchHref}
               onClick={() => setOpen(false)}
-              className="block rounded-lg px-3 py-2.5 font-medium text-teal transition-colors hover:bg-ink-3 hover:text-teal-bright"
+              className="block rounded-input px-3 py-3 text-teal transition-colors duration-150 hover:bg-ink-3 hover:text-teal-bright"
             >
               {switchLabel}
-            </a>
+            </Link>
           </li>
           <li className="mt-2">
             <a
               href={whatsappLink(waMessage)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-full bg-teal px-5 py-3 font-display text-sm font-medium uppercase tracking-wider text-ink"
+              className="flex items-center justify-center gap-2 rounded-full bg-teal px-5 py-3.5 text-sm font-semibold text-ink"
             >
-              <WhatsAppIcon className="h-4 w-4" />
-              Book Now
+              <WhatsappLogo className="h-4 w-4" weight="regular" />
+              Book your slot
             </a>
           </li>
         </ul>

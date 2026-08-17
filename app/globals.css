@@ -1,14 +1,54 @@
 @import "tailwindcss";
 
+/* ============================================================
+   ZEN WELLNESS - DESIGN TOKENS
+   ------------------------------------------------------------
+   Brand accent (teal) is preserved from the original identity.
+   Everything else is rebuilt.
+
+   SHAPE SYSTEM (one rule, applied everywhere):
+     buttons / pills .... full radius
+     cards / panels ..... 20px  (--r-card)
+     media frames ....... 20px  (--r-card)
+     inputs ............. 12px  (--r-input)
+
+   COLOR SYSTEM:
+     one accent (teal) + warm-neutral ground.
+     The ground is warm-dark, the accent is cool. That temperature
+     split is what keeps the page from reading as flat monochrome.
+
+   LAYERS:
+     Everything custom below lives in @layer base or @layer components.
+     This matters: Tailwind declares `theme, base, components, utilities`,
+     and unlayered CSS outranks every one of them. Leaving .img-frame
+     unlayered meant its `position: relative` silently beat `lg:absolute`
+     on the hero, which is what broke the image overlay.
+   ============================================================ */
+
 :root {
-  --ink: #061417;
-  --ink-2: #0a1e23;
-  --ink-3: #0e282e;
+  /* ground */
+  --ink: #05100f;
+  --ink-2: #0a1b1a;
+  --ink-3: #102726;
+
+  /* accent - preserved brand teal */
   --teal: #3ec6bc;
   --teal-bright: #6fe3da;
   --teal-deep: #17706b;
-  --foam: #eef7f6;
-  --mist: #9db9b6;
+
+  /* neutrals - warm, to counter the cool accent */
+  --bone: #f2efe9;
+  --mist: #9ab0ae;
+
+  /* shape */
+  --r-card: 20px;
+  --r-input: 12px;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-base: 300ms;
+  --dur-slow: 600ms;
 }
 
 @theme inline {
@@ -18,101 +58,267 @@
   --color-teal: var(--teal);
   --color-teal-bright: var(--teal-bright);
   --color-teal-deep: var(--teal-deep);
-  --color-foam: var(--foam);
+  --color-bone: var(--bone);
   --color-mist: var(--mist);
-  --font-display: var(--font-oswald);
-  --font-sans: var(--font-manrope);
-  --font-script: var(--font-caveat);
+  --font-display: var(--font-bricolage);
+  --font-sans: var(--font-instrument);
+  --radius-card: var(--r-card);
+  --radius-input: var(--r-input);
 }
 
-html {
-  scroll-behavior: smooth;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--ink);
+    color: var(--bone);
+    font-family: var(--font-instrument), system-ui, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--teal);
+    color: var(--ink);
+  }
+
+  /* one visible focus ring everywhere (WCAG 2.4.7) */
+  :focus-visible {
+    outline: 2px solid var(--teal-bright);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* inputs take the ring tight to the field instead */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline-offset: 0;
+  }
 }
 
-body {
-  background: var(--ink);
-  color: var(--foam);
-  font-family: var(--font-manrope), system-ui, sans-serif;
-  overflow-x: hidden;
+@layer components {
+  /* ---- display type ---- */
+
+  .font-display {
+    font-family: var(--font-bricolage), system-ui, sans-serif;
+    font-optical-sizing: auto;
+  }
+
+  /* Big headlines: tight, low-contrast tracking. Sentence case, not caps -
+     caps at this size was the single most templated thing about the old site. */
+  .h-display {
+    font-family: var(--font-bricolage), system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+  }
+
+  .h-section {
+    font-family: var(--font-bricolage), system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+
+  /* Emphasis inside headlines uses the SAME family in italic, never a second
+     display face. The leading and padding reserve stop descenders clipping. */
+  .em-italic {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--teal);
+    line-height: 1.1;
+    padding-bottom: 0.06em;
+  }
+
+  /* ---- surfaces ---- */
+
+  .panel {
+    background: var(--ink-2);
+    border: 1px solid rgb(242 239 233 / 0.07);
+    border-radius: var(--r-card);
+  }
+
+  .panel-raised {
+    background: linear-gradient(160deg, var(--ink-3) 0%, var(--ink-2) 60%);
+    border: 1px solid rgb(242 239 233 / 0.08);
+    border-radius: var(--r-card);
+  }
+
+  /* ---- photography grading ----
+     Every photo is pushed toward the brand teal and darkened so six unrelated
+     stock shots read as one commissioned set. */
+
+  .img-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-card);
+    background: var(--ink-2);
+  }
+
+  .img-frame img {
+    filter: saturate(0.6) contrast(1.04) brightness(0.92);
+  }
+
+  .img-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, transparent 35%, rgb(5 16 15 / 0.85) 100%),
+      linear-gradient(200deg, rgb(62 198 188 / 0.2) 0%, transparent 55%);
+  }
+
+  /* stronger treatment for backdrops that carry text on top */
+  .img-frame--deep::after {
+    background:
+      linear-gradient(180deg, rgb(5 16 15 / 0.35) 0%, rgb(5 16 15 / 0.92) 100%),
+      linear-gradient(200deg, rgb(62 198 188 / 0.26) 0%, transparent 60%);
+  }
+
+  /* Full-section backdrop carrying a heading and four blocks of body copy.
+     Graded almost to a silhouette on purpose: at normal exposure the photo's
+     sky was brighter than the bone text sitting on it, which put the copy
+     under 4.5:1. It is texture here, not a picture. */
+  .img-frame--backdrop img {
+    filter: saturate(0.35) contrast(1.1) brightness(0.44);
+  }
+
+  .img-frame--backdrop::after {
+    background:
+      linear-gradient(180deg, rgb(5 16 15 / 0.82) 0%, rgb(5 16 15 / 0.9) 100%),
+      linear-gradient(200deg, rgb(62 198 188 / 0.18) 0%, transparent 65%);
+  }
+
+  /* Hero media.
+     One overlay only. Two stacked gradients (a frame overlay plus a separate
+     feather element) left a hard vertical seam where the second one began, so
+     the blend into the page ground happens here and nowhere else. */
+  .img-frame--hero::after {
+    background: linear-gradient(
+      180deg,
+      rgb(5 16 15 / 0.15) 0%,
+      rgb(5 16 15 / 0.55) 100%
+    );
+  }
+
+  /* ---- textures ---- */
+
+  .noise::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .amb-glow {
+    background:
+      radial-gradient(ellipse 50% 40% at 78% 18%, rgb(62 198 188 / 0.13), transparent 62%),
+      radial-gradient(ellipse 42% 38% at 8% 88%, rgb(23 112 107 / 0.2), transparent 58%),
+      linear-gradient(170deg, var(--ink-2) 0%, var(--ink) 58%, #030b0a 100%);
+  }
+
+  /* ---- scroll reveal ---- */
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---- the spine: page-progress rail built from the logo's vertebrae ---- */
+
+  .spine-dot {
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      background-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+
+  .spine-dot[data-active="true"] {
+    transform: scale(1.9);
+    background-color: var(--teal);
+    box-shadow: 0 0 0 4px rgb(62 198 188 / 0.16);
+  }
+
+  .spine-fill {
+    transition: transform var(--dur-slow) var(--ease-out);
+    transform-origin: top;
+  }
 }
 
-::selection {
-  background: var(--teal);
-  color: var(--ink);
+/* From lg up the hero photo bleeds to the viewport edge, so its left side has
+   to dissolve into the page rather than stop at an edge.
+   This is done with a mask, not a dark gradient painted on top. Painting solid
+   --ink over the image left a faint vertical seam, because the page behind it
+   is the amb-glow gradient rather than flat --ink, so the two never quite
+   matched. Masking fades the actual pixels out and whatever is behind shows
+   through, so there is no colour to mismatch. */
+@layer components {
+  @media (min-width: 1024px) {
+    .img-frame--hero {
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgb(0 0 0 / 0.45) 24%,
+        rgb(0 0 0 / 0.9) 52%,
+        #000 70%
+      );
+      mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgb(0 0 0 / 0.45) 24%,
+        rgb(0 0 0 / 0.9) 52%,
+        #000 70%
+      );
+    }
+
+    /* keeps the exposed half readable and carries the teal grade */
+    .img-frame--hero::after {
+      background:
+        linear-gradient(
+          90deg,
+          rgb(5 16 15 / 0.5) 0%,
+          rgb(5 16 15 / 0.18) 45%,
+          transparent 78%
+        ),
+        linear-gradient(200deg, rgb(62 198 188 / 0.16) 0%, transparent 62%);
+    }
+  }
 }
 
-/* ---- textures ---- */
-
-.noise::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-.hero-glow {
-  background:
-    radial-gradient(ellipse 55% 45% at 72% 30%, rgba(62, 198, 188, 0.16), transparent 65%),
-    radial-gradient(ellipse 45% 40% at 15% 85%, rgba(23, 112, 107, 0.22), transparent 60%),
-    linear-gradient(165deg, var(--ink-2) 0%, var(--ink) 55%, #04100f 100%);
-}
-
-.card-sheen {
-  background: linear-gradient(150deg, rgba(62, 198, 188, 0.09) 0%, rgba(62, 198, 188, 0.02) 40%, transparent 70%);
-}
-
-/* ---- scroll reveal ---- */
-
-.reveal {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.reveal.is-visible {
-  opacity: 1;
-  transform: none;
-}
+/* ---- reduced motion ----
+   Everything collapses to its final state. Nothing animates, nothing loops.
+   Deliberately unlayered so it wins over both components and utilities. */
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .reveal {
     opacity: 1;
     transform: none;
     transition: none;
   }
-  html {
-    scroll-behavior: auto;
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-}
-
-/* ---- keyframes ---- */
-
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
-}
-
-.animate-float-slow {
-  animation: float-slow 7s ease-in-out infinite;
-}
-
-@keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(62, 198, 188, 0.45); }
-  70% { box-shadow: 0 0 0 16px rgba(62, 198, 188, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(62, 198, 188, 0); }
-}
-
-.animate-pulse-ring {
-  animation: pulse-ring 2.4s ease-out infinite;
-}
-
-@keyframes spine-glow {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
-}
-
-.spine-dot {
-  animation: spine-glow 3s ease-in-out infinite;
 }

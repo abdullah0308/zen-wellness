@@ -6,7 +6,8 @@ const browser = await puppeteer.launch({
   args: ["--disable-gpu"],
 });
 const page = await browser.newPage();
-await page.goto("http://localhost:3100", { waitUntil: "networkidle0" });
+// The booking form lives on the vertical landing pages, not the gateway.
+await page.goto("http://localhost:3100/massage", { waitUntil: "networkidle0" });
 await new Promise((r) => setTimeout(r, 1500)); // let React hydrate before interacting
 
 // capture window.open instead of opening a tab

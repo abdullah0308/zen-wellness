@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { Category } from "@/lib/site";
-import { StarIcon } from "./icons";
+import { Quotes, Star } from "./icons";
 
 type Review = {
   id: number;
@@ -14,15 +14,17 @@ type Review = {
 };
 
 const inputCls =
-  "w-full rounded-xl border border-foam/10 bg-ink px-4 py-3 text-sm text-foam placeholder:text-mist/50 outline-none transition-colors focus:border-teal/60 focus:ring-2 focus:ring-teal/20";
+  "w-full rounded-input border border-bone/12 bg-ink px-4 py-3 text-base text-bone placeholder:text-mist/60 outline-none transition-colors duration-150 focus:border-teal/70";
 
 function Stars({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
   return (
     <span className="inline-flex gap-0.5" aria-label={`${value} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <StarIcon
+        <Star
           key={n}
-          className={`${className} ${n <= value ? "text-teal" : "text-foam/15"}`}
+          weight={n <= value ? "fill" : "regular"}
+          className={`${className} ${n <= value ? "text-teal" : "text-bone/25"}`}
+          aria-hidden="true"
         />
       ))}
     </span>
@@ -30,18 +32,17 @@ function Stars({ value, className = "h-4 w-4" }: { value: number; className?: st
 }
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
 
-const VISIBLE_COUNT = 6;
+const VISIBLE_COUNT = 5;
 
 export function Testimonials({ category }: { category: Category }) {
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [showAll, setShowAll] = useState(false);
 
-  // form state
   const [formOpen, setFormOpen] = useState(false);
   const [name, setName] = useState("");
   const [rating, setRating] = useState(5);
@@ -71,7 +72,7 @@ export function Testimonials({ category }: { category: Category }) {
       const data = await res.json();
       if (!res.ok) {
         setStatus("error");
-        setErrorMsg(data.error ?? "Something went wrong — please try again.");
+        setErrorMsg(data.error ?? "That did not save. Please try again.");
         return;
       }
       if (data.review) setReviews((prev) => [data.review, ...(prev ?? [])]);
@@ -81,7 +82,7 @@ export function Testimonials({ category }: { category: Category }) {
       setRating(5);
     } catch {
       setStatus("error");
-      setErrorMsg("Something went wrong — please try again.");
+      setErrorMsg("That did not save. Check your connection and try again.");
     }
   }
 
@@ -92,187 +93,229 @@ export function Testimonials({ category }: { category: Category }) {
   const visible = reviews ? (showAll ? reviews : reviews.slice(0, VISIBLE_COUNT)) : [];
 
   return (
-    <section id="reviews" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24 lg:px-8">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <p className="font-display text-sm font-medium uppercase tracking-[0.35em] text-teal">
-            Testimonials
-          </p>
-          <h2 className="mt-3 font-display text-4xl font-semibold uppercase leading-tight text-foam sm:text-5xl">
-            What clients <span className="text-teal">say</span>
+    <section
+      id="reviews"
+      className="mx-auto max-w-[1400px] scroll-mt-24 px-5 py-24 lg:px-8 lg:py-32"
+    >
+      <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+        {/* ---- left: heading, score, action ---- */}
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <h2 className="h-section text-[clamp(2rem,4.5vw,3.25rem)] text-bone">
+            What clients <span className="em-italic">say</span>
           </h2>
-          {average !== null && (
-            <p className="mt-4 flex items-center gap-3 text-mist">
-              <Stars value={Math.round(average)} className="h-5 w-5" />
-              <span>
-                <span className="font-semibold text-foam">{average.toFixed(1)}</span> / 5 ·{" "}
-                {reviews!.length} review{reviews!.length === 1 ? "" : "s"}
-              </span>
-            </p>
-          )}
-        </div>
-        <button
-          onClick={() => {
-            setFormOpen((v) => !v);
-            setStatus("idle");
-          }}
-          className="rounded-full border border-teal/40 px-6 py-3 font-display text-sm font-medium uppercase tracking-wider text-teal transition-all hover:border-teal hover:text-teal-bright"
-        >
-          {formOpen ? "Close" : "Leave a review"}
-        </button>
-      </div>
 
-      {/* submit form */}
-      {formOpen && (
-        <form
-          onSubmit={submit}
-          className="mt-8 rounded-3xl border border-foam/[0.08] bg-ink-2 p-7 sm:p-8"
-        >
-          {status === "done" ? (
-            <div className="py-6 text-center">
-              <p className="font-script text-3xl text-teal-bright">Thank you!</p>
-              <p className="mt-2 text-sm text-mist">
-                Your review is now live — we really appreciate it.
+          {average !== null && (
+            <div className="mt-6 flex items-center gap-3">
+              <Stars value={Math.round(average)} className="h-5 w-5" />
+              <p className="text-sm text-mist">
+                <span className="text-base font-semibold text-bone">
+                  {average.toFixed(1)}
+                </span>{" "}
+                out of 5 from {reviews!.length} review
+                {reviews!.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          )}
+
+          <p className="mt-5 max-w-sm leading-relaxed text-mist">
+            Every review here was left by a real client, unedited.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormOpen((v) => !v);
+              setStatus("idle");
+            }}
+            aria-expanded={formOpen}
+            aria-controls="review-form"
+            className="mt-7 whitespace-nowrap rounded-full border border-teal/40 px-6 py-3 text-sm font-semibold text-teal transition-all duration-150 hover:border-teal hover:text-teal-bright active:scale-[0.98]"
+          >
+            {formOpen ? "Close" : "Leave a review"}
+          </button>
+        </div>
+
+        {/* ---- right: the reviews ---- */}
+        <div>
+          {formOpen && (
+            <form
+              id="review-form"
+              onSubmit={submit}
+              className="panel mb-10 p-6 sm:p-8"
+            >
+              {status === "done" ? (
+                <div className="py-6 text-center">
+                  <p className="h-section text-2xl text-bone">Thank you</p>
+                  <p className="mt-2 text-sm text-mist">
+                    Your review is live. We appreciate you taking the time.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                      <label
+                        htmlFor="rv-name"
+                        className="mb-2 block text-sm font-medium text-bone"
+                      >
+                        Your name
+                      </label>
+                      <input
+                        id="rv-name"
+                        required
+                        minLength={2}
+                        maxLength={60}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Sarah P."
+                        className={inputCls}
+                      />
+                    </div>
+
+                    <fieldset>
+                      <legend className="mb-2 block text-sm font-medium text-bone">
+                        Your rating
+                      </legend>
+                      <div
+                        className="flex items-center gap-1"
+                        onMouseLeave={() => setHoverRating(0)}
+                      >
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setRating(n)}
+                            onMouseEnter={() => setHoverRating(n)}
+                            aria-label={`${n} star${n === 1 ? "" : "s"}`}
+                            aria-pressed={n === rating}
+                            className="flex h-11 w-11 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110"
+                          >
+                            <Star
+                              weight={n <= (hoverRating || rating) ? "fill" : "regular"}
+                              className={`h-7 w-7 ${
+                                n <= (hoverRating || rating)
+                                  ? "text-teal"
+                                  : "text-bone/25"
+                              }`}
+                              aria-hidden="true"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  {/* honeypot, hidden from real users */}
+                  <input
+                    type="text"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="absolute -left-[9999px] h-0 w-0 opacity-0"
+                  />
+
+                  <div className="mt-5">
+                    <label
+                      htmlFor="rv-text"
+                      className="mb-2 block text-sm font-medium text-bone"
+                    >
+                      Your experience
+                    </label>
+                    <textarea
+                      id="rv-text"
+                      required
+                      minLength={10}
+                      maxLength={600}
+                      rows={4}
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder="How was your session? What changed for you?"
+                      aria-describedby={status === "error" ? "rv-error" : undefined}
+                      className={`${inputCls} resize-none`}
+                    />
+                  </div>
+
+                  {status === "error" && (
+                    <p id="rv-error" role="alert" className="mt-3 text-sm text-red-300">
+                      {errorMsg}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={status === "sending"}
+                    className="mt-6 whitespace-nowrap rounded-full bg-teal px-7 py-3 text-sm font-semibold text-ink transition-all duration-150 hover:bg-teal-bright active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {status === "sending" ? "Publishing" : "Publish review"}
+                  </button>
+                </>
+              )}
+            </form>
+          )}
+
+          {reviews === null ? (
+            /* Skeleton matches the shape of a real review row, so nothing
+               shifts when the data lands. */
+            <ul className="divide-y divide-bone/8" aria-busy="true">
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="py-7 first:pt-0">
+                  <div className="h-4 w-24 rounded bg-bone/8" />
+                  <div className="mt-4 h-3 w-full rounded bg-bone/8" />
+                  <div className="mt-2 h-3 w-4/5 rounded bg-bone/8" />
+                  <div className="mt-4 h-3 w-32 rounded bg-bone/8" />
+                </li>
+              ))}
+            </ul>
+          ) : reviews.length === 0 ? (
+            <div className="rounded-[20px] border border-dashed border-teal/25 bg-teal/[0.04] p-10 text-center">
+              <Quotes className="mx-auto h-8 w-8 text-teal" weight="regular" />
+              <p className="h-section mt-4 text-2xl text-bone">Be the first</p>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-mist">
+                No reviews yet. If you have had a session with us, we would love to
+                hear how it went.
               </p>
             </div>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="rv-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-mist">
-                    Your name
-                  </label>
-                  <input
-                    id="rv-name"
-                    required
-                    minLength={2}
-                    maxLength={60}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Sarah P."
-                    className={inputCls}
-                  />
-                </div>
-                <div>
-                  <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-mist">
-                    Your rating
-                  </span>
-                  <div className="flex items-center gap-1 py-2" onMouseLeave={() => setHoverRating(0)}>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setRating(n)}
-                        onMouseEnter={() => setHoverRating(n)}
-                        aria-label={`${n} star${n === 1 ? "" : "s"}`}
-                        className="transition-transform hover:scale-110"
+              <ul className="divide-y divide-bone/8">
+                {visible.map((review) => (
+                  <li key={review.id} className="py-7 first:pt-0">
+                    <Stars value={review.rating} />
+                    <blockquote className="mt-4 text-lg leading-relaxed text-bone/90">
+                      {review.text}
+                    </blockquote>
+                    <footer className="mt-4 flex items-center gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-teal/15 text-sm font-semibold uppercase text-teal"
                       >
-                        <StarIcon
-                          className={`h-7 w-7 ${
-                            n <= (hoverRating || rating) ? "text-teal" : "text-foam/15"
-                          }`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* honeypot — hidden from real users */}
-              <input
-                type="text"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                name="website"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                className="absolute -left-[9999px] h-0 w-0 opacity-0"
-              />
-
-              <div className="mt-4">
-                <label htmlFor="rv-text" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-mist">
-                  Your experience
-                </label>
-                <textarea
-                  id="rv-text"
-                  required
-                  minLength={10}
-                  maxLength={600}
-                  rows={4}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="How was your session? What changed for you?"
-                  className={`${inputCls} resize-none`}
-                />
-              </div>
-
-              {status === "error" && (
-                <p className="mt-3 text-sm text-red-400">{errorMsg}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                className="mt-5 rounded-full bg-teal px-7 py-3 font-display text-sm font-medium uppercase tracking-wider text-ink transition-all hover:bg-teal-bright disabled:opacity-60"
-              >
-                {status === "sending" ? "Publishing…" : "Publish review"}
-              </button>
-            </>
-          )}
-        </form>
-      )}
-
-      {/* reviews grid */}
-      <div className="mt-12">
-        {reviews === null ? (
-          <p className="text-sm text-mist/60">Loading reviews…</p>
-        ) : reviews.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-teal/25 bg-teal/[0.03] p-10 text-center">
-            <p className="font-script text-3xl text-teal-bright">Be the first!</p>
-            <p className="mx-auto mt-2 max-w-md text-sm text-mist">
-              No reviews yet — if you&apos;ve had a session with us, we&apos;d
-              love to hear how it went.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {visible.map((r) => (
-                <article
-                  key={r.id}
-                  className="flex h-full flex-col rounded-2xl border border-foam/[0.07] bg-ink-2 p-6"
-                >
-                  <Stars value={r.rating} />
-                  <p className="mt-4 flex-1 text-sm leading-relaxed text-foam/90">
-                    &ldquo;{r.text}&rdquo;
-                  </p>
-                  <footer className="mt-5 flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-teal/15 font-display text-sm font-semibold uppercase text-teal">
-                      {r.name.trim().charAt(0)}
-                    </span>
-                    <span>
-                      <span className="block text-sm font-semibold text-foam">{r.name}</span>
-                      <span className="block text-xs text-mist/70">
-                        {formatDate(r.createdAt)}
+                        {review.name.trim().charAt(0)}
                       </span>
-                    </span>
-                  </footer>
-                </article>
-              ))}
-            </div>
-            {reviews.length > VISIBLE_COUNT && (
-              <div className="mt-8 text-center">
+                      <p className="text-sm text-mist">
+                        <span className="font-semibold text-bone">{review.name}</span>
+                        <span className="mx-2 text-mist/40">/</span>
+                        {formatDate(review.createdAt)}
+                      </p>
+                    </footer>
+                  </li>
+                ))}
+              </ul>
+
+              {reviews.length > VISIBLE_COUNT && (
                 <button
+                  type="button"
                   onClick={() => setShowAll((v) => !v)}
-                  className="text-sm font-semibold text-teal transition-colors hover:text-teal-bright"
+                  className="mt-8 text-sm font-semibold text-teal transition-colors duration-150 hover:text-teal-bright"
                 >
                   {showAll ? "Show fewer" : `Show all ${reviews.length} reviews`}
                 </button>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   );

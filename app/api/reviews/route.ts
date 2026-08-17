@@ -45,18 +45,18 @@ export async function POST(request: NextRequest) {
   }
   if (name.length < 2 || name.length > 60) {
     return NextResponse.json(
-      { error: "Please enter your name (2–60 characters)." },
+      { error: "Please enter your name (2 to 60 characters)." },
       { status: 400 }
     );
   }
   if (text.length < 10 || text.length > 600) {
     return NextResponse.json(
-      { error: "Please write a review of 10–600 characters." },
+      { error: "Please write a review of 10 to 600 characters." },
       { status: 400 }
     );
   }
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return NextResponse.json({ error: "Rating must be 1–5." }, { status: 400 });
+    return NextResponse.json({ error: "Rating must be 1 to 5." }, { status: 400 });
   }
 
   const review = addReview({ category: body.category, name, rating, text });

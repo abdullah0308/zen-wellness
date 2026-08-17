@@ -6,8 +6,7 @@ export function whatsappLink(message: string) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
-export const DEFAULT_WA_MESSAGE =
-  "Hi Zen Wellness! I'd like to book a session.";
+export const DEFAULT_WA_MESSAGE = "Hi Zen Wellness! I'd like to book a session.";
 
 export type Category = "massage" | "coaching";
 
@@ -16,7 +15,16 @@ export type Service = {
   name: string;
   tagline: string;
   description: string;
-  icon: "sport" | "relax" | "deep" | "recovery" | "training" | "fatloss" | "muscle" | "endurance" | "rehab";
+  icon:
+    | "sport"
+    | "relax"
+    | "deep"
+    | "recovery"
+    | "training"
+    | "fatloss"
+    | "muscle"
+    | "endurance"
+    | "rehab";
 };
 
 export const MASSAGE_SERVICES: Service[] = [
@@ -25,7 +33,7 @@ export const MASSAGE_SERVICES: Service[] = [
     name: "Sport Massage",
     tagline: "Perform at your peak",
     description:
-      "Enhance performance, prevent injuries and speed up recovery — built for active bodies and training loads.",
+      "Built for active bodies and heavy training loads. Improves performance, prevents injury and shortens the gap between sessions.",
     icon: "sport",
   },
   {
@@ -33,7 +41,7 @@ export const MASSAGE_SERVICES: Service[] = [
     name: "Relaxation Massage",
     tagline: "Unwind, completely",
     description:
-      "Reduce stress, promote deep relaxation and improve your overall well-being from head to toe.",
+      "Slow, full-body work that lowers stress and quiets a busy head. The session you book when everything has been too much for too long.",
     icon: "relax",
   },
   {
@@ -41,7 +49,7 @@ export const MASSAGE_SERVICES: Service[] = [
     name: "Deep Tissue Massage",
     tagline: "Release what holds you back",
     description:
-      "Target chronic tension and release deep muscle knots with focused, firm-pressure work.",
+      "Focused, firm pressure on the knots that have been there for months. For chronic tension in shoulders, neck and lower back.",
     icon: "deep",
   },
   {
@@ -49,7 +57,7 @@ export const MASSAGE_SERVICES: Service[] = [
     name: "Recovery Sessions",
     tagline: "Bounce back faster",
     description:
-      "Aid muscle recovery, reduce soreness and get your body back to peak condition between sessions.",
+      "Post-training work that clears soreness and gets your body ready for the next effort instead of nursing the last one.",
     icon: "recovery",
   },
 ];
@@ -60,7 +68,7 @@ export const COACHING_SERVICES: Service[] = [
     name: "Fat Loss",
     tagline: "Lighter, for good",
     description:
-      "Structured, sustainable training to burn fat and keep it off — no crash plans, just consistent, visible results.",
+      "Structured training you can actually keep up. No crash plans, no punishment weeks, just steady change that holds.",
     icon: "fatloss",
   },
   {
@@ -68,7 +76,7 @@ export const COACHING_SERVICES: Service[] = [
     name: "Muscle Building",
     tagline: "Build real strength",
     description:
-      "Progressive strength training to build lean muscle, improve posture and shape your physique.",
+      "Progressive strength work that builds lean muscle, straightens up your posture and changes how you carry yourself.",
     icon: "muscle",
   },
   {
@@ -76,7 +84,7 @@ export const COACHING_SERVICES: Service[] = [
     name: "Endurance",
     tagline: "Go further",
     description:
-      "Conditioning programmes that build stamina, heart health and all-day energy — step by step.",
+      "Conditioning that builds stamina and heart health, so the stairs, the hike and the second half all get easier.",
     icon: "endurance",
   },
   {
@@ -84,7 +92,7 @@ export const COACHING_SERVICES: Service[] = [
     name: "Rehabilitation",
     tagline: "Come back stronger",
     description:
-      "Careful, guided training to rebuild strength, mobility and confidence after injury or a long break.",
+      "Careful, guided training that rebuilds strength, mobility and confidence after an injury or a long time away.",
     icon: "rehab",
   },
 ];

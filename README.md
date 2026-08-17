@@ -81,19 +81,47 @@ npm run start
 ## Reviews
 
 - Clients submit reviews from the **Testimonials** section on either landing
-  page — no login. Reviews are stored in SQLite at `data/reviews.db`
-  (auto-created, git-ignored) and appear immediately.
+  page — no login. Reviews are stored in **Neon Postgres** and appear
+  immediately.
 - Spam protection: server-side validation + a hidden honeypot field that
   silently discards bot submissions.
 - **Moderation:** open `/admin`, enter the admin password, delete anything.
-- **Password:** set `ADMIN_PASSWORD` in `.env.local` (or your host's env
-  vars). ⚠️ If unset it falls back to `zen-admin` — change this before
-  going live:
 
-  ```
-  # .env.local
-  ADMIN_PASSWORD=choose-something-strong
-  ```
+### Database
+
+Storage lives behind three functions in [lib/reviews.ts](lib/reviews.ts)
+(`listReviews`, `addReview`, `deleteReview`). Nothing else in the app touches
+the database, so swapping providers means rewriting that one file.
+
+The driver talks to Neon over HTTP rather than the Postgres wire protocol, so
+there is no connection pool to exhaust when a burst of serverless invocations
+starts at once. **Use the pooled connection string** — the host contains
+`-pooler`.
+
+Set up (or reset) the schema with:
+
+```bash
+node --env-file=.env.local scripts/db-setup.mjs
+```
+
+That script is the only place DDL lives; the app never issues it, so no request
+pays for a `CREATE TABLE` round trip on a cold start.
+
+### Environment variables
+
+```
+# .env.local — gitignored, never commit it
+DATABASE_URL='postgresql://…-pooler…neon.tech/neondb?sslmode=require'
+ADMIN_PASSWORD=choose-something-strong
+```
+
+⚠️ `ADMIN_PASSWORD` falls back to `zen-admin` when unset. Change it before
+going live.
+
+In production both variables must be set in the host's environment. On Vercel
+they are configured for Production, Preview and Development. Note that Preview
+values can be scoped per Git branch — if a new branch's preview returns errors
+on `/api/reviews`, it is probably missing `DATABASE_URL`.
 
 ## Editing common things
 
@@ -102,6 +130,7 @@ npm run start
 | Phone / WhatsApp number | [lib/site.ts](lib/site.ts) (`PHONE_DISPLAY`, `WHATSAPP_NUMBER`) |
 | Services & descriptions (both verticals) | [lib/site.ts](lib/site.ts) (`MASSAGE_SERVICES`, `COACHING_SERVICES`) |
 | Brand colours | [app/globals.css](app/globals.css) (`:root` variables) |
+| Review storage | [lib/reviews.ts](lib/reviews.ts) + `scripts/db-setup.mjs` |
 | Page copy (hero, chips, headings) | [app/massage/page.tsx](app/massage/page.tsx), [app/coaching/page.tsx](app/coaching/page.tsx) |
 | Gateway cards | [app/page.tsx](app/page.tsx) |
 | Section components | `components/` — shared by both verticals via props |
@@ -129,8 +158,9 @@ With the site running on port 3100 (`npm run start -- -p 3100`):
 
 ## Deploy
 
-Needs a Node host with a **persistent disk** for `data/reviews.db`
-(Railway, Render with a disk, a VPS, etc.). Serverless platforms like
-Vercel won't persist the SQLite file between deploys/instances — if you
-want Vercel, swap `lib/reviews.ts` for a hosted DB (e.g. Turso/Supabase);
-the rest of the code doesn't change.
+Deployed on **Vercel**, connected to this GitHub repo: pushes to `main` go to
+production, other branches get a preview deployment.
+
+Reviews live in Neon rather than on disk, so the ephemeral serverless
+filesystem is no longer a problem. Any Node host works — just set
+`DATABASE_URL` and `ADMIN_PASSWORD` in its environment.

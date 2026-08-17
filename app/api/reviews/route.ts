@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   if (category !== undefined && !isCategory(category)) {
     return NextResponse.json({ error: "Unknown category" }, { status: 400 });
   }
-  return NextResponse.json({ reviews: listReviews(category) });
+  return NextResponse.json({ reviews: await listReviews(category) });
 }
 
 export async function POST(request: NextRequest) {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Rating must be 1 to 5." }, { status: 400 });
   }
 
-  const review = addReview({ category: body.category, name, rating, text });
+  const review = await addReview({ category: body.category, name, rating, text });
   return NextResponse.json({ ok: true, review }, { status: 201 });
 }
 
@@ -72,7 +72,7 @@ export async function DELETE(request: NextRequest) {
   if (!Number.isInteger(id) || id < 1) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
-  const removed = deleteReview(id);
+  const removed = await deleteReview(id);
   if (!removed) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

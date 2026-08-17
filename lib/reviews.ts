@@ -1,31 +1,31 @@
-import { DatabaseSync } from "node:sqlite";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
+import { neon } from "@neondatabase/serverless";
+
+/**
+ * Review storage, backed by Neon Postgres.
+ *
+ * This used to be SQLite on local disk, which cannot work on Vercel: the
+ * filesystem is ephemeral and not shared between instances, so reviews
+ * disappeared on the next deploy and were invisible to other instances in the
+ * meantime.
+ *
+ * The driver talks to Neon over HTTP rather than the Postgres wire protocol,
+ * so there is no connection pool to exhaust when many serverless invocations
+ * start at once. Use the pooled connection string (host contains "-pooler").
+ *
+ * Schema lives in scripts/db-setup.mjs and is applied out of band, so no
+ * request pays for DDL.
+ */
+
+export type Category = "massage" | "coaching";
 
 export type Review = {
   id: number;
-  category: "massage" | "coaching";
+  category: Category;
   name: string;
   rating: number;
   text: string;
   createdAt: string;
 };
-
-// One connection per process; module scope is cached across requests.
-const dataDir = path.join(process.cwd(), "data");
-mkdirSync(dataDir, { recursive: true });
-const db = new DatabaseSync(path.join(dataDir, "reviews.db"));
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS reviews (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    category TEXT NOT NULL CHECK (category IN ('massage','coaching')),
-    name TEXT NOT NULL,
-    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    text TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
-  )
-`);
 
 type Row = {
   id: number;
@@ -33,45 +33,66 @@ type Row = {
   name: string;
   rating: number;
   text: string;
-  created_at: string;
+  created_at: Date | string;
 };
 
-function toReview(r: Row): Review {
+/**
+ * Resolved per call rather than at module scope: reading the env var at import
+ * time throws during `next build`, which imports this module to collect page
+ * data before any request has a runtime environment.
+ */
+function db() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      "DATABASE_URL is not set. Add it to .env.local for local development, " +
+        "and to the project's environment variables in production."
+    );
+  }
+  return neon(url);
+}
+
+function toReview(row: Row): Review {
   return {
-    id: r.id,
-    category: r.category as Review["category"],
-    name: r.name,
-    rating: r.rating,
-    text: r.text,
-    createdAt: r.created_at,
+    id: row.id,
+    category: row.category as Category,
+    name: row.name,
+    rating: row.rating,
+    text: row.text,
+    // The client formats this, so hand it a stable ISO string rather than
+    // whatever shape the driver decided to return.
+    createdAt:
+      row.created_at instanceof Date
+        ? row.created_at.toISOString()
+        : new Date(row.created_at).toISOString(),
   };
 }
 
-export function listReviews(category?: "massage" | "coaching"): Review[] {
+export async function listReviews(category?: Category): Promise<Review[]> {
+  const sql = db();
   const rows = category
-    ? db
-        .prepare("SELECT * FROM reviews WHERE category = ? ORDER BY id DESC")
-        .all(category)
-    : db.prepare("SELECT * FROM reviews ORDER BY id DESC").all();
+    ? await sql`SELECT * FROM reviews WHERE category = ${category} ORDER BY id DESC`
+    : await sql`SELECT * FROM reviews ORDER BY id DESC`;
   return (rows as Row[]).map(toReview);
 }
 
-export function addReview(input: {
-  category: "massage" | "coaching";
+export async function addReview(input: {
+  category: Category;
   name: string;
   rating: number;
   text: string;
-}): Review {
-  const result = db
-    .prepare("INSERT INTO reviews (category, name, rating, text) VALUES (?, ?, ?, ?)")
-    .run(input.category, input.name, input.rating, input.text);
-  const row = db
-    .prepare("SELECT * FROM reviews WHERE id = ?")
-    .get(Number(result.lastInsertRowid)) as Row;
-  return toReview(row);
+}): Promise<Review> {
+  const sql = db();
+  const rows = await sql`
+    INSERT INTO reviews (category, name, rating, text)
+    VALUES (${input.category}, ${input.name}, ${input.rating}, ${input.text})
+    RETURNING *
+  `;
+  return toReview((rows as Row[])[0]);
 }
 
-export function deleteReview(id: number): boolean {
-  const result = db.prepare("DELETE FROM reviews WHERE id = ?").run(id);
-  return result.changes > 0;
+export async function deleteReview(id: number): Promise<boolean> {
+  const sql = db();
+  const rows = await sql`DELETE FROM reviews WHERE id = ${id} RETURNING id`;
+  return (rows as unknown[]).length > 0;
 }
